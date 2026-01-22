@@ -1,0 +1,14 @@
+{
+    "name": "NHỊP TIM HƠI THỞ",
+    "description": "Mục mở rộng để làm việc với kết nối UART ESP32C6 XIAOMI và cảm biến mmWave để đo nhịp tim và hơi thở.",
+    "libs": [],
+    "blocks": [
+        "definition.js"
+    ],
+    "toolbox": "toolbox.xml",
+    "languages": {
+        "en": "languages/en.js",
+        "vi": "languages/vi.js"
+    },
+    "poster": "poster.png"
+}

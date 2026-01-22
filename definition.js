@@ -1,0 +1,400 @@
+const UartColorBlock = "#0b5394";
+
+var digitalPins = [
+  [
+    "D3",
+    "D3"
+  ],
+  [
+    "D4",
+    "D4"
+  ],
+  [
+    "D5",
+    "D5"
+  ],
+  [
+    "D6",
+    "D6"
+  ],
+  [
+    "D7",
+    "D7"
+  ],
+  [
+    "D8",
+    "D8"
+  ],
+  [
+    "D9",
+    "D9"
+  ],
+  [
+    "D10",
+    "D10"
+  ],
+  [
+    "D11",
+    "D11"
+  ],
+  [
+    "D12",
+    "D12"
+  ],
+  [
+    "D13",
+    "D13"
+  ],
+  [
+    "D0",
+    "D0"
+  ],
+  [
+    "D1",
+    "D1"
+  ],
+  [
+    "D2",
+    "D2"
+  ]
+];
+
+Blockly.Blocks['uno_uart_init'] = {
+  init: function () {
+    this.jsonInit(
+      {
+        type: "uno_uart_init",
+        message0: "khởi tạo UART chân RX %1 chân TX %2 baudrate %3",
+        previousStatement: null,
+        nextStatement: null,
+        args0: [
+          {
+            type: "field_dropdown",
+            name: "RX",
+            "options": digitalPins
+          },
+          {
+            "type": "field_dropdown",
+            "name": "TX",
+            "options": digitalPins
+          },
+          {
+            "type": "field_number",
+            "name": "BAUDRATE",
+            "value": 115200
+          }
+        ],
+        colour: UartColorBlock,
+        tooltip: "khởi tạo kết nối UART",
+        helpUrl: ""
+      }
+    );
+  }
+};
+
+Blockly.Python['uno_uart_init'] = function (block) {
+  // TODO: Assemble Python into code variable.
+  var tx = block.getFieldValue('TX');
+  var rx = block.getFieldValue('RX');
+  var baudrate = block.getFieldValue('BAUDRATE');
+  Blockly.Python.definitions_['import_machine'] = 'import machine';
+  Blockly.Python.definitions_['create_UART']= 'uart = machine.UART(2, baudrate=' + baudrate + ', rx=' + rx + '_PIN, tx=' + tx + '_PIN)\nuart.init(parity=None, stop=1, bits=8)\n';
+  var code = '';
+  return code;
+};
+
+Blockly.Blocks["uno_uart_read_until"] = {
+  init: function () {
+    this.jsonInit({
+      colour: UartColorBlock,
+      tooltip: "đọc dữ liệu từ UART",
+      message0: "đọc UART cho đến ký tự %1",
+      output: null,
+      args0: [
+        {
+          type: "field_dropdown",
+          name: "END_CHAR",
+          options: [
+            ["xuống dòng", "\\n"],
+            [",", ","],
+            ["$", "$"],
+            [":", ":"],
+            [".", "."],
+            ["#", "#"],
+            ["CR", "\\r"],
+            ["khoảng trắng", " "],
+            ["tab", "\\t"],
+            ["|", "|"],
+            [";", ";"],
+          ],
+        }
+      ],
+      helpUrl: "",
+    });
+  },
+};
+
+Blockly.Python['uno_uart_read_until'] = function (block) {
+  // TODO: Assemble Python into code variable.
+  var eol = block.getFieldValue('END_CHAR');
+
+  var cbFunctionName = Blockly.Python.provideFunction_(
+    'uart_read_until',
+    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(eol):',
+      "  result = ''",
+      "  while uart.any():",
+      "    new_char = uart.read(1).decode()",
+      "    if new_char == eol:",
+      "      return result",
+      "    else:",
+      "      result += str(new_char)",
+      "  return result",
+    ]);
+
+  var code = "await " + cbFunctionName + '("' + eol + '")';
+  return [code, Blockly.Python.ORDER_NONE];
+};
+
+Blockly.Blocks["uno_uart_write_string"] = {
+  init: function () {
+    this.jsonInit({
+      colour: UartColorBlock,
+      nextStatement: null,
+      tooltip: "gửi dữ liệu qua UART",
+      message0: "gửi chuỗi %1 %2 qua UART",
+      previousStatement: null,
+      args0: [
+        {
+          type: "input_dummy",
+        },
+        {
+          type: "input_value",
+          name: "MESSAGE",
+        },
+      ],
+      helpUrl: "",
+    });
+  },
+};
+
+Blockly.Python['uno_uart_write_string'] = function (block) {
+  // TODO: Assemble Python into code variable.
+  var msg = Blockly.Python.valueToCode(block, 'MESSAGE', Blockly.Python.ORDER_ATOMIC);
+  var code = 'uart.write(str(' + msg + '))\n';
+  return code;
+};
+
+Blockly.Blocks["uno_uart_read_bytes"] = {
+  init: function () {
+    this.jsonInit({
+      colour: UartColorBlock,
+      tooltip: "đọc n bytes từ UART",
+      message0: "đọc UART %1 %2 bytes ",
+      output: null,
+      args0: [
+        {
+          type: "input_dummy",
+        },
+        {
+          type: "input_value",
+          name: "BYTES",
+        },
+      ],
+      helpUrl: "",
+    });
+  },
+};
+
+Blockly.Python['uno_uart_read_bytes'] = function (block) {
+  // TODO: Assemble Python into code variable.
+  var bytes = Blockly.Python.valueToCode(block, 'BYTES', Blockly.Python.ORDER_ATOMIC);
+  var code = 'uart.read(' + bytes + ')';
+  return [code, Blockly.Python.ORDER_NONE];
+};
+
+Blockly.Blocks["uno_uart_write_bytes"] = {
+  init: function () {
+    this.jsonInit({
+      colour: UartColorBlock,
+      nextStatement: null,
+      tooltip: "gửi dữ liệu dạng byte vào UART",
+      message0: "gửi bytes %1 %2 qua UART",
+      previousStatement: null,
+      args0: [
+        {
+          type: "input_dummy",
+        },
+        {
+          type: "input_value",
+          name: "BYTES",
+        }
+      ],
+      helpUrl: "",
+    });
+  },
+};
+
+Blockly.Python['uno_uart_write_bytes'] = function (block) {
+  var raw_input = Blockly.Python.valueToCode(block, 'BYTES', Blockly.Python.ORDER_ATOMIC) || '""';
+
+  // Bỏ dấu nháy đầu và cuối nếu có (có thể là ' hoặc ")
+  if ((raw_input.startsWith('"') && raw_input.endsWith('"')) ||
+      (raw_input.startsWith("'") && raw_input.endsWith("'"))) {
+    raw_input = raw_input.slice(1, -1);
+  }
+
+  // Làm sạch chuỗi: loại bỏ khoảng trắng dư và giữ nguyên định dạng hex
+  var cleaned = raw_input.replace(/\s+/g, '');
+
+  // Tạo mã Python
+  var code = 'uart.write(bytearray([' + cleaned + ']))\n';
+  return code;
+
+};
+
+Blockly.Blocks["uno_uart_check_data"] = {
+  init: function () {
+    this.jsonInit({
+      colour: UartColorBlock,
+      tooltip: "kiểm tra xem có dữ liệu gửi đến UART hay không",
+      message0: "có dữ liệu gửi đến UART?",
+      output: null,
+      args0: [
+      ],
+      helpUrl: "",
+    });
+  },
+};
+
+Blockly.Python['uno_uart_check_data'] = function (block) {
+  // TODO: Assemble Python into code variable.
+  var code = 'uart.any()';
+  return [code, Blockly.Python.ORDER_NONE];
+};
+
+Blockly.Blocks["uno_uart_deinit"] = {
+  init: function () {
+    this.jsonInit({
+      colour: UartColorBlock,
+      nextStatement: null,
+      tooltip: "tắt và hủy kết nối UART",
+      message0: "tắt kết nối UART",
+      previousStatement: null,
+      args0: [
+      ],
+      helpUrl: "",
+    });
+  },
+};
+
+Blockly.Python['uno_uart_deinit'] = function (block) {
+  // TODO: Assemble Python into code variable.
+  var code = 'uart.deinit()\n';
+  return code;
+};``
+
+
+// --- BỔ SUNG 2 KHỐI ĐỌC DỮ LIỆU ĐÃ TÁCH ---
+
+Blockly.Blocks['mmwave_read_heart'] = {
+  init: function () {
+    this.jsonInit({
+      colour: UartColorBlock,
+      tooltip: "Đọc giá trị nhịp tim từ dữ liệu UART (heart_rate)",
+      message0: "nhịp tim (BPM)",
+      output: "Number",
+      helpUrl: ""
+    });
+  }
+};
+
+Blockly.Blocks['mmwave_read_breath'] = {
+  init: function () {
+    this.jsonInit({
+      colour: UartColorBlock,
+      tooltip: "Đọc giá trị nhịp thở từ dữ liệu UART (breath_rate)",
+      message0: "nhịp thở (lần/phút)",
+      output: "Number",
+      helpUrl: ""
+    });
+  }
+};
+
+// --- GENERATOR CHO 2 KHỐI MỚI (ĐÃ CẬP NHẬT PARSE DATA) ---
+
+// --- GENERATOR CHO 2 KHỐI MỚI (FIX LỖI GENERATOR OBJECT) ---
+
+Blockly.Python['mmwave_read_heart'] = function (block) {
+  // Hàm Python dùng chung để parse dữ liệu
+  // LƯU Ý: Dùng 'def' thường, KHÔNG dùng 'async def'
+  var cbFunctionName = Blockly.Python.provideFunction_(
+    'update_mmwave_data',
+    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(mode):',
+      '  global _mmwave_heart, _mmwave_breath',
+      '  # Khoi tao bien toan cuc',
+      '  if "_mmwave_heart" not in globals(): _mmwave_heart = 0',
+      '  if "_mmwave_breath" not in globals(): _mmwave_breath = 0',
+      '',
+      '  # Doc sach buffer UART de lay du lieu moi nhat',
+      '  if uart.any():', // Chỉ đọc khi có dữ liệu
+      '    while uart.any():',
+      '      try:',
+      '        line = uart.readline()',
+      '        if line:',
+      '          text = line.decode().strip()',
+      '          # Parse du lieu: heart_rate:80.00,breath_rate:15.00',
+      '          if "heart_rate" in text and "breath_rate" in text:',
+      '             parts = text.split(",")',
+      '             for p in parts:',
+      '               if "heart_rate" in p:',
+      '                 try: _mmwave_heart = float(p.split(":")[1])',
+      '                 except: pass',
+      '               elif "breath_rate" in p:',
+      '                 try: _mmwave_breath = float(p.split(":")[1])',
+      '                 except: pass',
+      '      except:',
+      '        pass',
+      '',
+      '  if mode == "heart": return _mmwave_heart',
+      '  if mode == "breath": return _mmwave_breath',
+      '  return 0'
+    ]);
+
+  // Gọi hàm dạng đồng bộ (không có await)
+  var code = cbFunctionName + '("heart")';
+  return [code, Blockly.Python.ORDER_FUNCTION_CALL];
+};
+
+Blockly.Python['mmwave_read_breath'] = function (block) {
+  // Sử dụng lại hàm update_mmwave_data (Blockly tự động nhận diện trùng tên)
+  var cbFunctionName = Blockly.Python.provideFunction_(
+    'update_mmwave_data',
+    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(mode):',
+      '  global _mmwave_heart, _mmwave_breath',
+      '  if "_mmwave_heart" not in globals(): _mmwave_heart = 0',
+      '  if "_mmwave_breath" not in globals(): _mmwave_breath = 0',
+      '  if uart.any():',
+      '    while uart.any():',
+      '      try:',
+      '        line = uart.readline()',
+      '        if line:',
+      '          text = line.decode().strip()',
+      '          if "heart_rate" in text and "breath_rate" in text:',
+      '             parts = text.split(",")',
+      '             for p in parts:',
+      '               if "heart_rate" in p: ',
+      '                 try: _mmwave_heart = float(p.split(":")[1])',
+      '                 except: pass',
+      '               elif "breath_rate" in p:',
+      '                 try: _mmwave_breath = float(p.split(":")[1])',
+      '                 except: pass',
+      '      except:',
+      '        pass',
+      '  if mode == "heart": return _mmwave_heart',
+      '  if mode == "breath": return _mmwave_breath',
+      '  return 0'
+    ]);
+
+  var code = cbFunctionName + '("breath")';
+  return [code, Blockly.Python.ORDER_FUNCTION_CALL];
+};
