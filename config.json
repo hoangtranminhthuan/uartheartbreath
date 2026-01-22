@@ -1,5 +1,5 @@
 {
-    "name": "NHỊP TIM HƠI THỞ V2",
+    "name": "NHỊP TIM HƠI THỞ V3",
     "description": "Mục mở rộng để làm việc với kết nối UART ESP32C6 XIAOMI và cảm biến mmWave để đo nhịp tim và hơi thở.",
     "libs": [],
     "blocks": [
