@@ -294,13 +294,41 @@ Blockly.Python['uno_uart_deinit'] = function (block) {
 };
 
 
-// --- BỔ SUNG 2 KHỐI ĐỌC DỮ LIỆU ĐÃ TÁCH ---
+// --- ĐỊNH NGHĨA HÀM PYTHON DƯỚI DẠNG CHUỖI CỨNG (RAW STRING) ---
+// Cách này đảm bảo 100% không bị dính chữ 'async' do hệ thống tự thêm
+var PYTHON_FUNC_UPDATE_MMWAVE = [
+  'def update_mmwave_data(mode):',
+  '  global _mmwave_heart, _mmwave_breath',
+  '  if "_mmwave_heart" not in globals(): _mmwave_heart = 0',
+  '  if "_mmwave_breath" not in globals(): _mmwave_breath = 0',
+  '  if uart.any():',
+  '    while uart.any():',
+  '      try:',
+  '        line = uart.readline()',
+  '        if line:',
+  '          text = line.decode().strip()',
+  '          if "heart_rate" in text and "breath_rate" in text:',
+  '             parts = text.split(",")',
+  '             for p in parts:',
+  '               if "heart_rate" in p:',
+  '                 try: _mmwave_heart = float(p.split(":")[1])',
+  '                 except: pass',
+  '               elif "breath_rate" in p:',
+  '                 try: _mmwave_breath = float(p.split(":")[1])',
+  '                 except: pass',
+  '      except:',
+  '        pass',
+  '  if mode == "heart": return _mmwave_heart',
+  '  if mode == "breath": return _mmwave_breath',
+  '  return 0'
+].join('\n');
 
+// --- KHỐI ĐỌC NHỊP TIM ---
 Blockly.Blocks['mmwave_read_heart'] = {
   init: function () {
     this.jsonInit({
       colour: UartColorBlock,
-      tooltip: "Đọc giá trị nhịp tim từ dữ liệu UART (heart_rate)",
+      tooltip: "Đọc giá trị nhịp tim (BPM)",
       message0: "nhịp tim (BPM)",
       output: "Number",
       helpUrl: ""
@@ -308,11 +336,21 @@ Blockly.Blocks['mmwave_read_heart'] = {
   }
 };
 
+Blockly.Python['mmwave_read_heart'] = function (block) {
+  // BƯỚC QUAN TRỌNG: Gán thẳng code vào definitions_
+  // Hệ thống sẽ in nguyên văn đoạn này ra, không sửa đổi gì cả.
+  Blockly.Python.definitions_['function_update_mmwave_data'] = PYTHON_FUNC_UPDATE_MMWAVE;
+  
+  var code = 'update_mmwave_data("heart")';
+  return [code, Blockly.Python.ORDER_FUNCTION_CALL];
+};
+
+// --- KHỐI ĐỌC NHỊP THỞ ---
 Blockly.Blocks['mmwave_read_breath'] = {
   init: function () {
     this.jsonInit({
       colour: UartColorBlock,
-      tooltip: "Đọc giá trị nhịp thở từ dữ liệu UART (breath_rate)",
+      tooltip: "Đọc giá trị nhịp thở (lần/phút)",
       message0: "nhịp thở (lần/phút)",
       output: "Number",
       helpUrl: ""
@@ -320,81 +358,10 @@ Blockly.Blocks['mmwave_read_breath'] = {
   }
 };
 
-// --- GENERATOR CHO 2 KHỐI MỚI (ĐÃ CẬP NHẬT PARSE DATA) ---
-
-// --- GENERATOR CHO 2 KHỐI MỚI (FIX LỖI GENERATOR OBJECT) ---
-
-Blockly.Python['mmwave_read_heart'] = function (block) {
-  // Hàm Python dùng chung để parse dữ liệu
-  // LƯU Ý: Dùng 'def' thường, KHÔNG dùng 'async def'
-  var cbFunctionName = Blockly.Python.provideFunction_(
-    'update_mmwave_data',
-    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(mode):',
-      '  global _mmwave_heart, _mmwave_breath',
-      '  # Khoi tao bien toan cuc',
-      '  if "_mmwave_heart" not in globals(): _mmwave_heart = 0',
-      '  if "_mmwave_breath" not in globals(): _mmwave_breath = 0',
-      '',
-      '  # Doc sach buffer UART de lay du lieu moi nhat',
-      '  if uart.any():', // Chỉ đọc khi có dữ liệu
-      '    while uart.any():',
-      '      try:',
-      '        line = uart.readline()',
-      '        if line:',
-      '          text = line.decode().strip()',
-      '          # Parse du lieu: heart_rate:80.00,breath_rate:15.00',
-      '          if "heart_rate" in text and "breath_rate" in text:',
-      '             parts = text.split(",")',
-      '             for p in parts:',
-      '               if "heart_rate" in p:',
-      '                 try: _mmwave_heart = float(p.split(":")[1])',
-      '                 except: pass',
-      '               elif "breath_rate" in p:',
-      '                 try: _mmwave_breath = float(p.split(":")[1])',
-      '                 except: pass',
-      '      except:',
-      '        pass',
-      '',
-      '  if mode == "heart": return _mmwave_heart',
-      '  if mode == "breath": return _mmwave_breath',
-      '  return 0'
-    ]);
-
-  // Gọi hàm dạng đồng bộ (không có await)
-  var code = cbFunctionName + '("heart")';
-  return [code, Blockly.Python.ORDER_FUNCTION_CALL];
-};
-
 Blockly.Python['mmwave_read_breath'] = function (block) {
-  // Sử dụng lại hàm update_mmwave_data (Blockly tự động nhận diện trùng tên)
-  var cbFunctionName = Blockly.Python.provideFunction_(
-    'update_mmwave_data',
-    ['def ' + Blockly.Python.FUNCTION_NAME_PLACEHOLDER_ + '(mode):',
-      '  global _mmwave_heart, _mmwave_breath',
-      '  if "_mmwave_heart" not in globals(): _mmwave_heart = 0',
-      '  if "_mmwave_breath" not in globals(): _mmwave_breath = 0',
-      '  if uart.any():',
-      '    while uart.any():',
-      '      try:',
-      '        line = uart.readline()',
-      '        if line:',
-      '          text = line.decode().strip()',
-      '          if "heart_rate" in text and "breath_rate" in text:',
-      '             parts = text.split(",")',
-      '             for p in parts:',
-      '               if "heart_rate" in p: ',
-      '                 try: _mmwave_heart = float(p.split(":")[1])',
-      '                 except: pass',
-      '               elif "breath_rate" in p:',
-      '                 try: _mmwave_breath = float(p.split(":")[1])',
-      '                 except: pass',
-      '      except:',
-      '        pass',
-      '  if mode == "heart": return _mmwave_heart',
-      '  if mode == "breath": return _mmwave_breath',
-      '  return 0'
-    ]);
+  // Gán code (nếu khối trên chưa chạy thì khối này sẽ gán)
+  Blockly.Python.definitions_['function_update_mmwave_data'] = PYTHON_FUNC_UPDATE_MMWAVE;
 
-  var code = cbFunctionName + '("breath")';
+  var code = 'update_mmwave_data("breath")';
   return [code, Blockly.Python.ORDER_FUNCTION_CALL];
 };
