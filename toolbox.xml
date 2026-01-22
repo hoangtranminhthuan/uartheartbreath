@@ -39,6 +39,5 @@
     <!-- <block type="uno_uart_deinit" /> -->
     <block type="mmwave_read_heart" />
     <block type="mmwave_read_breath" />
-    
   </category>
 </xml>

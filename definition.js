@@ -291,7 +291,7 @@ Blockly.Python['uno_uart_deinit'] = function (block) {
   // TODO: Assemble Python into code variable.
   var code = 'uart.deinit()\n';
   return code;
-};``
+};
 
 
 // --- BỔ SUNG 2 KHỐI ĐỌC DỮ LIỆU ĐÃ TÁCH ---
