@@ -296,8 +296,9 @@ Blockly.Python['uno_uart_deinit'] = function (block) {
 
 // --- ĐỊNH NGHĨA HÀM PYTHON DƯỚI DẠNG CHUỖI CỨNG (RAW STRING) ---
 // Cách này đảm bảo 100% không bị dính chữ 'async' do hệ thống tự thêm
-var PYTHON_FUNC_UPDATE_MMWAVE = [
+var PYTHON_FUNC_UPDATE_MMWAVE = "exec(\"\"\"" + [
   'def update_mmwave_data(mode):',
+  '  # version 1.0 - 2024-06-12',
   '  global _mmwave_heart, _mmwave_breath',
   '  if "_mmwave_heart" not in globals(): _mmwave_heart = 0',
   '  if "_mmwave_breath" not in globals(): _mmwave_breath = 0',
@@ -321,7 +322,7 @@ var PYTHON_FUNC_UPDATE_MMWAVE = [
   '  if mode == "heart": return _mmwave_heart',
   '  if mode == "breath": return _mmwave_breath',
   '  return 0'
-].join('\n');
+].join('\n') + "\"\"\")";
 
 // --- KHỐI ĐỌC NHỊP TIM ---
 Blockly.Blocks['mmwave_read_heart'] = {
